@@ -20,7 +20,7 @@ public class Scrapper {
     private static final String USER_AGENT = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0";
     private static final String URL = "https://www.tokopedia.com/p/handphone-tablet/handphone";
     private static final String CSV_SEPARATOR = ";";
-    private static final String FILE_PATH = "output-file/parse.csv";
+    private static final String FILE_PATH = "target/parse.csv";
     private static final int DATA_TO_SEARCH = 100;
 
     private int index = 0;
