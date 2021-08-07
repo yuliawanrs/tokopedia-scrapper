@@ -8,3 +8,4 @@
 ```mvn clean compile assembly:single```
 - Run the app by command 
 ```java -cp target/tokopedia-scrapper-1.0-SNAPSHOT-jar-with-dependencies.jar com.example.tokopedia.Scrapper```
+- You can see the result in file `parse.csv` in folder `target`
