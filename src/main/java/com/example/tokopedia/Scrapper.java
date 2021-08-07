@@ -17,26 +17,33 @@ import java.util.List;
 import java.util.Map;
 
 public class Scrapper {
-    private static final String USERAGENT = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0";
+    private static final String USER_AGENT = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0";
     private static final String URL = "https://www.tokopedia.com/p/handphone-tablet/handphone";
     private static final String CSV_SEPARATOR = ";";
+    private static final String FILE_PATH = "target/parse.csv";
+    private static final int DATA_TO_SEARCH = 100;
+
+    private int index = 0;
+    private int page = 1;
+    private List<ParsedData> parsedData = new ArrayList<>();
 
     public static void main(String[] args) {
         Document doc;
         try {
-            doc = Jsoup.connect("https://www.tokopedia.com/p/handphone-tablet/handphone").userAgent("Mozilla").get();
-
-            Elements links = doc.select("a[data-testid='lnkProductContainer']");
             Scrapper scrapper = new Scrapper();
-            scrapper.parseData(links);
+            while (scrapper.getIndex() < DATA_TO_SEARCH) {
+                doc = Jsoup.connect(URL + "?page=" + scrapper.getPage()).userAgent(USER_AGENT).get();
+                Elements links = doc.select("a[data-testid='lnkProductContainer']");
+                scrapper.parseData(links);
+                scrapper.addOneToPage();
+            }
+            writeToCSV(scrapper.getParsedData());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private void parseData(Elements links) {
-        int index = 0;
-        List<ParsedData> parsedDatas = new ArrayList<>();
         for (Element link : links) {
             Document doc = getListing(link);
             if( doc != null) {
@@ -54,10 +61,10 @@ public class Scrapper {
                 // Name of store or merchant.
                 String store =  img.attr("alt").split("dari")[1].trim();
 
-                parsedDatas.add(new ParsedData(index, name.text(), desc.text(), img.attr("src"), price.text(), rating == null ? "0" : rating.attr("content"), store));
+                parsedData.add(new ParsedData(index, name.text(), desc.text(), img.attr("src"), price.text(), rating == null ? "0" : rating.attr("content"), store));
             }
+            if(page == DATA_TO_SEARCH) break;
         }
-        writeToCSV(parsedDatas);
 
         System.out.println("Data: " + index);
     }
@@ -75,7 +82,7 @@ public class Scrapper {
             }
             Response response= Jsoup.connect(urlUsed)
                         .ignoreContentType(true)
-                        .userAgent(USERAGENT)
+                        .userAgent(USER_AGENT)
                         .referrer(URL)
                         .timeout(0)
                         .followRedirects(true)
@@ -104,7 +111,7 @@ public class Scrapper {
     {
         try
         {
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("target/parse.csv"), StandardCharsets.UTF_8.toString()));
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(FILE_PATH), StandardCharsets.UTF_8.toString()));
             for (ParsedData data : parsedData)
             {
                 String oneLine = data.getName() +
@@ -117,7 +124,8 @@ public class Scrapper {
                         CSV_SEPARATOR +
                         data.getRating() +
                         CSV_SEPARATOR +
-                        data.getStore();
+                        data.getStore() +
+                        CSV_SEPARATOR;
                 bw.write(oneLine);
                 bw.newLine();
             }
@@ -126,4 +134,19 @@ public class Scrapper {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
+    public int getPage() {
+        return page;
+    }
+
+    public void addOneToPage() {
+        this.page++;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public List<ParsedData> getParsedData() {
+        return parsedData;
+    }
 }
