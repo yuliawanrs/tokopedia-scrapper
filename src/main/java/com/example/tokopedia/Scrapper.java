@@ -17,33 +17,25 @@ import java.util.List;
 import java.util.Map;
 
 public class Scrapper {
-    private static final String USER_AGENT = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0";
-    private static final String URL = "https://www.tokopedia.com/p/handphone-tablet/handphone";
+
     private static final String CSV_SEPARATOR = ";";
     private static final String FILE_PATH = "target/parse.csv";
-    private static final int DATA_TO_SEARCH = 100;
+
+    private final String URL;
+    private final String USER_AGENT;
+    private final int DATA_TO_SEARCH;
 
     private int index = 0;
     private int page = 1;
     private List<ParsedData> parsedData = new ArrayList<>();
 
-    public static void main(String[] args) {
-        Document doc;
-        try {
-            Scrapper scrapper = new Scrapper();
-            while (scrapper.getIndex() < DATA_TO_SEARCH) {
-                doc = Jsoup.connect(URL + "?page=" + scrapper.getPage()).userAgent(USER_AGENT).get();
-                Elements links = doc.select("a[data-testid='lnkProductContainer']");
-                scrapper.parseData(links);
-                scrapper.addOneToPage();
-            }
-            writeToCSV(scrapper.getParsedData());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public Scrapper(String URL, String USER_AGENT, int DATA_TO_SEARCH) {
+        this.URL = URL;
+        this.USER_AGENT = USER_AGENT;
+        this.DATA_TO_SEARCH = DATA_TO_SEARCH;
     }
 
-    private void parseData(Elements links) {
+    public void parseData(Elements links) {
         for (Element link : links) {
             Document doc = getListing(link);
             if( doc != null) {
@@ -107,7 +99,7 @@ public class Scrapper {
         return map;
     }
 
-    private static void writeToCSV(List<ParsedData> parsedData)
+    public void writeToCSV(List<ParsedData> parsedData)
     {
         try
         {
